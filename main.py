@@ -7,55 +7,60 @@ from urllib.parse import urlparse
 import logging
 
 
-
-
-# Read environment variables (default to True for screen, False for file)
+# CURRENTLY MANUALLY SET. UPDATE AS ARGS OR ENVIRONMENT VARIABLES
 log_to_screen = True
 log_to_file = True
-log_file_path = os.getenv("./", "app3.log")  # Default log file
+log_dir_path = './.itwaisi/logs'
+log_filename = 'app.log'
+log_file_path = os.path.join(log_dir_path, log_filename)
 
-# Create a logger
-logger = logging.getLogger("MyLogger")
-logger.setLevel(logging.DEBUG)  # Set the minimum logging level
 
-# Define log format
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+# CHECK IF LOG DIRECTORY EXISTS OR NOT
+if not os.path.exists(log_dir_path):
+    
+    # CREATE LOG DIRECTORY IF IT DOES NOT EXIST
+    os.makedirs(log_dir_path, True) 
 
-# Log to screen if enabled
+# CREATE LOGGER
+logger = logging.getLogger('StressLogger')
+
+# SET DEFAULT LOGGING LEVEL
+logger.setLevel(logging.DEBUG)
+
+# LOGGING FORMAT
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# LOG TO SCREEN IF ENABLED
 if log_to_screen:
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-# Log to file if enabled
+# LOG TO FILE IF ENABLED
 if log_to_file:
     file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
-# Example log messages
-logger.debug("This is a debug message")
-logger.info("This is an info message")
-logger.warning("This is a warning message")
-logger.error("This is an error message")
-logger.critical("This is a critical message")
 
-
-
+# FUNCTION: PARSE SYSTEM ARGS AND SET DEFAULT VALUE
 def parse_arg(arg_list, arg_key, def_value=None):
     return next((arg.split('=')[1] for arg in arg_list if arg.startswith(f'{arg_key}=')), def_value)
 
 
+# FUNCTION: CONVERT SYSTEM ARG FROM STRING TO INTEGER
 def parse_int_string(data):
     return int(data) if data.isdigit() else None
 
 
+# FUNCTION: CONVERT SYSTEM ARG FROM STRING TO BOOLEAN
 def parse_boolean(data):
     return True if data.lower() == 'true' or data == '1' else False
 
 
+# FUNCTION: GET SYSTEM ARGS
 def get_args():
     
     arg_list = sys.argv
@@ -96,8 +101,8 @@ def get_args():
     header_host = domain.lstrip('www.')
 
     headers = {
-        "Host": header_host,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0",
+        'Host': header_host,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
     }
 
     try:
@@ -127,7 +132,7 @@ def get_args():
         # current_ip = ''
 
         # HTTPBIN
-        current_ip = response.json()["origin"]
+        current_ip = response.json()['origin']
 
         # ICANHAZIP
         # current_ip = response.content.decode(encoding='utf-8').strip()
@@ -140,10 +145,10 @@ def get_args():
     else:
         print(f'[STRESS TEST] :: IP Not Checked :: VPN Not In Use :: {current_ip}\r\n')
         return {
-            "url": ARG_URL,
-            "requests": ARG_REQUESTS,
-            "workers": ARG_WORKERS,
-            "server_ip": ARG_SERVER_IP,
+            'url': ARG_URL,
+            'requests': ARG_REQUESTS,
+            'workers': ARG_WORKERS,
+            'server_ip': ARG_SERVER_IP,
         }
     
 
@@ -168,14 +173,14 @@ def main():
     
     # create an list of 5000 sites to test with
     counter_url = 0
-    for y in range(args["requests"]):
+    for y in range(args['requests']):
         counter_url += 1
         print(f'[STRESS TEST] :: Add URL {counter_url} times')
-        urls.append(args["url"])
+        urls.append(args['url'])
     
     def send(url):
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0"
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0'
         }
         content = httpx.get(url, headers=headers).content
         responses.append(content)
@@ -184,7 +189,7 @@ def main():
         print(f'[STRESS TEST] :: (send) :: End :: {url}')
     
     '''
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args["workers"]) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args['workers']) as executor:
         futures = []
         for index, url in enumerate(urls):
             futures.append(executor.submit(send, url))
@@ -192,7 +197,7 @@ def main():
     '''
     
     ''''''
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args["workers"]) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args['workers']) as executor:
         futures = []
         for index, url in enumerate(urls):
             futures.append(executor.submit(send, url))
@@ -207,7 +212,7 @@ def main():
     # get average requests per second
     elapsed_time = end - start
     if elapsed_time == 0:
-        rate = "Infinity"  # Or you can set it to 0
+        rate = 'Infinity'  # Or you can set it to 0
     else:
         rate = str(round(len(urls) / elapsed_time, 0))
 
